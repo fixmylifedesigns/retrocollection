@@ -1,5 +1,6 @@
 import Link from "next/link";
 import GameCard from "@/components/GameCard";
+import ShelfRail from "@/components/ShelfRail";
 import { getLibrary, type Provider } from "@/lib/library";
 import { SYSTEMS, SYSTEM_ORDER, type SystemId } from "@/lib/systems";
 
@@ -18,25 +19,38 @@ export default async function LibraryPage() {
 
   return (
     <>
-      <section className="flex flex-wrap items-end justify-between gap-6 pt-10 pb-4 sm:pt-16">
-        <div>
-          <h1 className="display text-6xl font-extrabold sm:text-8xl">Your shelf</h1>
-          <p className="mt-4 text-lg text-muted">
-            {games.length === 0
-              ? "Nothing here yet."
-              : `${games.length} ${games.length === 1 ? "game" : "games"} across Game Boy, GBA and PS2.`}
-          </p>
+      <section className="relative pb-16 pt-8 text-center sm:pt-12">
+        <div aria-hidden className="glow" />
+        <h1 className="display relative mx-auto max-w-3xl text-[40px] sm:text-6xl">
+          My collection,
+          <br />
+          playable anywhere.
+        </h1>
+        <p className="relative mx-auto mt-6 max-w-md text-base leading-relaxed text-muted">
+          Game Boy, GBA and PS2 games from my shelf, running right in the browser. Pair a controller and pick
+          something to play.
+        </p>
+        <div className="relative mt-8 flex flex-wrap justify-center gap-3">
+          <a
+            href="#shelf-gb"
+            className="inline-flex h-11 items-center justify-center rounded-full bg-ink px-7 text-sm font-medium text-paper transition-opacity hover:opacity-85"
+          >
+            Browse the shelf
+          </a>
+          <Link
+            href="/play/local"
+            className="inline-flex h-11 items-center justify-center rounded-full border border-line px-7 text-sm font-medium transition-colors hover:bg-plastic"
+          >
+            Play a file from this device
+          </Link>
         </div>
-        <Link
-          href="/play/local"
-          className="rounded-full bg-ink px-5 py-3 font-medium text-paper transition-transform hover:-translate-y-0.5"
-        >
-          Play a file from this device
-        </Link>
+        <p className="relative mt-6 text-sm text-muted">
+          {games.length === 0 ? "Nothing on the shelf yet." : `${games.length} ${games.length === 1 ? "game" : "games"} on the shelf`}
+        </p>
       </section>
 
       {error && (
-        <p role="alert" className="mt-4 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900">
+        <p role="alert" className="mb-8 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-500">
           Couldn’t read your library: {error}
         </p>
       )}
@@ -45,23 +59,29 @@ export default async function LibraryPage() {
         const system = SYSTEMS[id];
         const list = bySystem[id];
         return (
-          <section key={id} className="mt-14" aria-labelledby={`shelf-${id}`}>
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h2 id={`shelf-${id}`} className="text-2xl font-bold">
-                {system.name}
-              </h2>
-              <span className="text-muted">{list.length}</span>
-              {system.status === "experimental" && (
-                <span className="rounded-full bg-plastic px-2.5 py-0.5 text-xs text-muted">Experimental</span>
-              )}
-            </div>
-            <div className="shelf">
-              {list.length > 0 ? (
-                list.map((game) => <GameCard key={game.id} game={game} />)
-              ) : (
-                <p className="pb-6 text-muted">{emptyShelfText(id, provider)}</p>
-              )}
-            </div>
+          // Each system gets its own stage; a 3D render of the console can sit above the rail later.
+          <section key={id} id={`shelf-${id}`} className="scroll-mt-8 border-t border-line py-16 text-center" aria-labelledby={`shelf-${id}-title`}>
+            <p className="text-sm text-muted">
+              {system.year}
+              {system.status === "experimental" ? ", experimental" : ""}
+            </p>
+            <h2 id={`shelf-${id}-title`} className="mt-2 text-3xl font-light sm:text-4xl">
+              {system.name}
+            </h2>
+            <p className="mt-3 text-sm text-muted">
+              {list.length} {list.length === 1 ? "game" : "games"}
+            </p>
+            {list.length > 0 ? (
+              <ShelfRail label={system.name}>
+                {list.map((game) => (
+                  <div role="listitem" key={game.id}>
+                    <GameCard game={game} />
+                  </div>
+                ))}
+              </ShelfRail>
+            ) : (
+              <p className="mx-auto mt-8 max-w-md text-muted">{emptyShelfText(id, provider)}</p>
+            )}
           </section>
         );
       })}

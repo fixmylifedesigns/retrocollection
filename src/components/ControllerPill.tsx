@@ -9,7 +9,7 @@ export default function ControllerPill() {
   return (
     <Link
       href="/controller"
-      className="flex items-center gap-2 rounded-full border border-line bg-white/60 px-3 py-1.5 text-sm"
+      className="flex h-9 items-center gap-2 rounded-full border border-line px-4 text-xs font-medium tracking-wide"
       title={connected ? pads.map((p) => padName(p.id)).join(", ") : "No controller detected"}
     >
       <span

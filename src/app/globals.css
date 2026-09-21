@@ -1,49 +1,93 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
-  --color-paper: #eceef2;
-  --color-plastic: #d4d6dd;
-  --color-ink: #1c1f2e;
-  --color-muted: #5d6174;
-  --color-line: #c3c6cf;
-  --color-gb: #6f7f14;
+/* fixmylife tokens (shared with the fixmylife site). Dark is the default;
+   the theme toggle sets data-theme on <html>. */
+:root,
+[data-theme="dark"] {
+  --bg: #050505;
+  --fg: #f5f5f7;
+  --fg-muted: #86868b;
+  --line: rgba(255, 255, 255, 0.1);
+  --surface: rgba(255, 255, 255, 0.06);
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #0a0a0a;
+  --fg-muted: #6e6e73;
+  --line: rgba(0, 0, 0, 0.1);
+  --surface: rgba(0, 0, 0, 0.04);
+  color-scheme: light;
+}
+
+/* Existing utility names (bg-paper, text-ink…) now follow the theme. */
+@theme inline {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-paper: var(--bg);
+  --color-ink: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-line: var(--line);
+  --color-plastic: var(--surface);
+  --color-gb: #7d8f17;
   --color-gb-screen: #9bbc0f;
-  --color-gba: #5b45c8;
-  --color-ps2: #2f5fe0;
+  --color-gba: #6a55d8;
+  --color-ps2: #3a6af0;
 }
 
 html {
-  background: var(--color-paper);
-  color: var(--color-ink);
+  background: var(--bg);
+  color: var(--fg);
   font-family: var(--font-sans);
-  font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 300ms, color 300ms;
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-ink);
+  outline: 2px solid var(--fg);
   outline-offset: 3px;
   border-radius: 4px;
 }
 
+/* Big, light headlines in the fixmylife style */
 .display {
-  font-variation-settings: "wdth" 75;
-  letter-spacing: -0.02em;
-  line-height: 0.92;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
 }
 
-/* ---------- The shelf: physical media, one shape per system ---------- */
+/* Soft indigo/fuchsia glow behind heroes */
+.glow {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  height: 520px;
+  width: min(900px, 140vw);
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  opacity: 0.4;
+  filter: blur(120px);
+  background: radial-gradient(circle, rgb(99 102 241 / 0.35) 0%, rgb(217 70 239 / 0.15) 45%, transparent 70%);
+}
+
+/* ---------- The shelf: a scrolling rail of physical media ---------- */
 
 .shelf {
   display: flex;
-  flex-wrap: wrap;
   align-items: flex-start;
-  gap: 1.75rem 1.25rem;
-  padding: 1.5rem 0 0;
-  border-bottom: 14px solid #b8bcc6;
-  box-shadow: 0 6px 0 #979ba7;
-  border-radius: 0 0 3px 3px;
+  justify-content: safe center;
+  gap: 2.5rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 2rem 1.5rem 1rem;
+  scrollbar-width: none;
+}
+.shelf::-webkit-scrollbar {
+  display: none;
+}
+.shelf > * {
+  flex-shrink: 0;
+  scroll-snap-align: center;
 }
 
 .item {
@@ -55,10 +99,25 @@ html {
 }
 
 .item .media {
-  transition: transform 160ms ease-out;
+  transition: transform 300ms ease-out;
 }
 .item:is(:hover, :focus-visible) .media {
-  transform: translateY(-8px) rotate(-1.5deg);
+  transform: translateY(-6px) scale(1.03);
+}
+
+/* Launch: the cart lifts, then drops into the slot before the game opens.
+   This is the hook where the 3D console animation will go. */
+.item.launching .media {
+  animation: insert 520ms cubic-bezier(0.55, 0, 0.75, 0.2) forwards;
+}
+.item.launching .caption {
+  opacity: 0;
+  transition: opacity 200ms;
+}
+@keyframes insert {
+  0% { transform: translateY(-6px) scale(1.03); }
+  30% { transform: translateY(-22px) scale(1.06); }
+  100% { transform: translateY(90px) scale(0.92); opacity: 0; }
 }
 .item[aria-disabled="true"] .media {
   filter: saturate(0.85);
@@ -145,7 +204,7 @@ html {
   background: #1b1d27;
   border-radius: 4px;
   position: relative;
-  box-shadow: inset 3px 0 0 #2a2d3a;
+  box-shadow: inset 3px 0 0 #2a2d3a, 0 0 0 1px rgb(255 255 255 / 0.08);
 }
 .case-ps2::before {
   content: "PS2";
@@ -158,8 +217,10 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .item .media {
+  .item .media,
+  .item.launching .media {
     transition: none;
+    animation: none;
   }
   .item:is(:hover, :focus-visible) .media {
     transform: none;
