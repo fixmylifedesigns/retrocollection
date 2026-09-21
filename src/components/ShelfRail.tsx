@@ -6,7 +6,16 @@ import { useEffect, useRef, useState } from "react";
  * Horizontal, snap-scrolling rail of games. Arrows appear only when the rail
  * overflows. Later this is where 3D renders of each game can take over.
  */
-export default function ShelfRail({ children, label }: { children: React.ReactNode; label: string }) {
+export default function ShelfRail({
+  children,
+  label,
+  onCentered,
+}: {
+  children: React.ReactNode;
+  label: string;
+  /** Called with the index of the card nearest the middle after scrolling (for touch screens). */
+  onCentered?: (index: number) => void;
+}) {
   const rail = useRef<HTMLDivElement>(null);
   const [overflows, setOverflows] = useState(false);
 
@@ -17,7 +26,29 @@ export default function ShelfRail({ children, label }: { children: React.ReactNo
     check();
     const observer = new ResizeObserver(check);
     observer.observe(el);
-    return () => observer.disconnect();
+
+    let timer = 0;
+    const onScroll = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        const middle = el.getBoundingClientRect().left + el.clientWidth / 2;
+        let best = 0;
+        let bestDistance = Infinity;
+        Array.from(el.children).forEach((child, i) => {
+          const r = child.getBoundingClientRect();
+          const distance = Math.abs(r.left + r.width / 2 - middle);
+          if (distance < bestDistance) [best, bestDistance] = [i, distance];
+        });
+        onCentered?.(best);
+      }, 120);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      observer.disconnect();
+      el.removeEventListener("scroll", onScroll);
+      window.clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function scrollBy(direction: number) {
