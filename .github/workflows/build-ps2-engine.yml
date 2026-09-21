@@ -1,0 +1,66 @@
+# Builds the Play! PS2 emulator (https://github.com/jpd002/Play-) for the web
+# and publishes Play.js + Play.wasm to the "play-wasm" release of this repo.
+# `npm run build` downloads them into public/ps2/ (see scripts/fetch-ps2-engine.mjs).
+name: Build PS2 engine (Play!)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Play! branch, tag or commit to build"
+        default: "master"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Emscripten
+        uses: emscripten-core/setup-emsdk@v16
+        with:
+          version: 4.0.1
+
+      - name: Install Ninja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+
+      - name: Check out Play!
+        uses: actions/checkout@v7
+        with:
+          repository: jpd002/Play-
+          ref: ${{ inputs.ref }}
+          submodules: recursive
+          fetch-depth: 0
+          path: play
+
+      - name: Configure
+        working-directory: play
+        run: emcmake cmake --preset wasm-ninja
+
+      - name: Build Play.wasm
+        working-directory: play
+        run: cmake --build --preset wasm-ninja-release --target Play
+
+      - name: Collect files
+        run: |
+          mkdir dist
+          OUT=play/build_cmake/build/wasm-ninja/Source/ui_js/Release
+          cp "$OUT/Play.js" "$OUT/Play.wasm" dist/
+          cp play/License.txt dist/PLAY_LICENSE.txt
+          git -C play describe --tags --always > dist/VERSION
+          ls -lh dist
+
+      - name: Publish to the play-wasm release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(cat dist/VERSION)
+          gh release view play-wasm --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create play-wasm --repo "$GITHUB_REPOSITORY" --title "PS2 engine (Play!)" \
+              --notes "WebAssembly build of Play! (https://github.com/jpd002/Play-), BSD-2-Clause. Rebuilt by the 'Build PS2 engine' workflow."
+          gh release edit play-wasm --repo "$GITHUB_REPOSITORY" --notes "Play! $VERSION built for the web from jpd002/Play- (BSD-2-Clause, see PLAY_LICENSE.txt)."
+          gh release upload play-wasm dist/* --repo "$GITHUB_REPOSITORY" --clobber
