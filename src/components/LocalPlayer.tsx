@@ -39,7 +39,7 @@ export default function LocalPlayer() {
     return (
       <section>
         <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
-          <h1 className="display text-4xl font-extrabold sm:text-5xl">{loaded.name}</h1>
+          <h1 className="display text-4xl sm:text-5xl">{loaded.name}</h1>
           <button
             type="button"
             onClick={() => {
@@ -62,7 +62,7 @@ export default function LocalPlayer() {
 
   return (
     <section className="max-w-2xl">
-      <h1 className="display text-5xl font-extrabold sm:text-6xl">Play a file from this device</h1>
+      <h1 className="display text-[40px] sm:text-6xl">Play a file from this device</h1>
       <p className="mt-4 text-lg text-muted">
         The file stays on your device. Nothing is uploaded.
       </p>
@@ -79,7 +79,7 @@ export default function LocalPlayer() {
           choose(e.dataTransfer.files[0]);
         }}
         className={`mt-8 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
-          dragging ? "border-gba bg-gba/5" : "border-line bg-white/50 hover:border-muted"
+          dragging ? "border-gba bg-gba/5" : "border-line bg-plastic hover:border-muted"
         }`}
       >
         <span className="text-lg font-semibold">Drop a ROM here or choose a file</span>

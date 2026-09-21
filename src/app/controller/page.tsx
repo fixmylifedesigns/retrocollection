@@ -25,7 +25,7 @@ const PAIRING = [
 export default function ControllerPage() {
   return (
     <>
-      <h1 className="display pt-10 text-6xl font-extrabold sm:pt-16 sm:text-8xl">Controller</h1>
+      <h1 className="display pt-10 text-[40px] sm:pt-16 sm:text-6xl">Controller</h1>
       <p className="mt-4 max-w-xl text-lg text-muted">
         Press buttons and move the sticks to check everything registers before you play.
       </p>
@@ -33,7 +33,7 @@ export default function ControllerPage() {
       <ControllerTester />
 
       <section className="mt-16 max-w-3xl">
-        <h2 className="text-2xl font-bold">Pair a Bluetooth controller</h2>
+        <h2 className="text-2xl font-light">Pair a Bluetooth controller</h2>
         <p className="mt-2 text-muted">
           Pair once with your device. After that, this site sees the controller whenever it’s on.
         </p>

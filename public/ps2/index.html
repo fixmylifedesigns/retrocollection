@@ -3,33 +3,56 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#eceef2" />
+    <meta name="theme-color" content="#050505" />
     <title>PS2 · Retro Collection</title>
+    <script>
+      // Same saved theme as the rest of the site (and the fixmylife site).
+      try {
+        var t = localStorage.getItem("fixmylife-theme");
+        if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+        document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <!-- crossorigin keeps the font loadable under Cross-Origin-Embedder-Policy -->
+    <link rel="stylesheet" crossorigin="anonymous" href="https://fonts.googleapis.com/css2?family=Inter:wght@300..600&display=swap" />
     <!--
       Standalone page on purpose: Play! uses threads (SharedArrayBuffer), which
       need the cross-origin isolation headers set for /ps2/* in next.config.ts.
       Those headers only apply to a full page load, so links here are plain <a>.
     -->
     <style>
-      :root {
-        --paper: #eceef2; --plastic: #d4d6dd; --ink: #1c1f2e; --muted: #5d6174;
-        --line: #c3c6cf; --ps2: #2f5fe0; --on: #9bbc0f;
-        font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-        color: var(--ink); background: var(--paper);
+      :root, [data-theme="dark"] {
+        --paper: #050505; --plastic: rgba(255,255,255,0.06); --ink: #f5f5f7; --muted: #86868b;
+        --line: rgba(255,255,255,0.10); color-scheme: dark;
       }
+      [data-theme="light"] {
+        --paper: #ffffff; --plastic: rgba(0,0,0,0.04); --ink: #0a0a0a; --muted: #6e6e73;
+        --line: rgba(0,0,0,0.10); color-scheme: light;
+      }
+      :root {
+        --ps2: #3a6af0; --on: #9bbc0f;
+        font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      html { color: var(--ink); background: var(--paper); transition: background-color 300ms, color 300ms; }
       * { box-sizing: border-box; }
       body { margin: 0; min-height: 100dvh; }
       a { color: inherit; }
       :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
       .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.25rem 6rem; }
-      header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; padding: 1.25rem 0; }
-      .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; }
-      .back { color: var(--muted); font-size: 0.9rem; }
-      .pill { text-decoration: none; margin-left: auto; display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--line);
-        background: rgb(255 255 255 / 0.6); border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.875rem; }
+      header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; padding: 1.5rem 0; font-size: 0.875rem; }
+      .brand { text-decoration: none; }
+      .brand span { color: var(--muted); }
+      .back { color: var(--muted); text-decoration: none; }
+      .back:hover { color: var(--ink); }
+      .actions { margin-left: auto; display: flex; gap: 0.5rem; }
+      .pill { text-decoration: none; display: flex; align-items: center; gap: 0.5rem; height: 2.25rem; border: 1px solid var(--line);
+        background: transparent; color: inherit; border-radius: 999px; padding: 0 1rem; font: inherit; font-size: 0.75rem;
+        font-weight: 500; letter-spacing: 0.02em; cursor: pointer; }
+      .pill:hover { background: var(--plastic); }
       .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--line); }
       .dot.on { background: var(--on); box-shadow: 0 0 0 3px rgb(155 188 15 / 0.25); }
-      h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 0.95; letter-spacing: -0.02em; margin: 1.5rem 0 0.5rem; font-weight: 800; }
+      h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 1.1; letter-spacing: -0.025em; margin: 1.5rem 0 0.5rem; font-weight: 300; }
       .sub { color: var(--muted); margin: 0 0 1.5rem; }
       .tag { display: inline-block; background: var(--plastic); color: var(--muted); border-radius: 999px;
         padding: 0.1rem 0.6rem; font-size: 0.75rem; vertical-align: middle; margin-left: 0.5rem; }
@@ -37,7 +60,7 @@
         border-radius: 0.75rem; overflow: hidden; box-shadow: 0 24px 48px -24px rgb(28 31 46 / 0.6); }
       canvas { width: 100%; height: 100%; display: block; outline: none; }
       .overlay { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 1.5rem;
-        background: #11131b; color: #e8eaf0; }
+        background: #0b0b0d; color: #e8eaf0; }
       .overlay[hidden] { display: none; }
       .overlay p { max-width: 34rem; margin: 0.5rem auto; line-height: 1.5; color: #b9bdcc; }
       .overlay strong { display: block; font-size: 1.25rem; color: #fff; margin-bottom: 0.25rem; }
@@ -56,15 +79,18 @@
       table { border-collapse: collapse; width: 100%; }
       td { padding: 0.2rem 0; }
       td:first-child { color: var(--ink); padding-right: 1rem; white-space: nowrap; }
-      kbd { font: inherit; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 0 0.3rem; }
+      kbd { font: inherit; background: var(--plastic); border: 1px solid var(--line); border-radius: 4px; padding: 0 0.3rem; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header>
-        <a class="brand" href="/">Retro Collection</a>
+        <a class="brand" href="/"><span>fixmylife</span> Retro Collection</a>
         <a class="back" href="/">Back to your shelf</a>
-        <a class="pill" href="/controller"><span class="dot" id="padDot"></span><span id="padName">No controller</span></a>
+        <div class="actions">
+          <a class="pill" href="/controller"><span class="dot" id="padDot"></span><span id="padName">No controller</span></a>
+          <button class="pill" type="button" id="theme">Light</button>
+        </div>
       </header>
 
       <h1 id="title">PlayStation 2 <span class="tag">Experimental</span></h1>

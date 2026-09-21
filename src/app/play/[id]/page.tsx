@@ -26,7 +26,7 @@ export default async function PlayPage({ params }: Props) {
         Back to your shelf
       </Link>
       <div className="mt-3 mb-6 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h1 className="display text-4xl font-extrabold sm:text-5xl">{game.title}</h1>
+        <h1 className="display text-4xl sm:text-5xl">{game.title}</h1>
         <p className="text-muted">
           {system.shortName}
           {game.size ? `, ${formatSize(game.size)}` : ""}

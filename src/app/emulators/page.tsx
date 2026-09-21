@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Emulators" };
 export default function EmulatorsPage() {
   return (
     <>
-      <h1 className="display pt-10 text-6xl font-extrabold sm:pt-16 sm:text-8xl">Emulators</h1>
+      <h1 className="display pt-10 text-[40px] sm:pt-16 sm:text-6xl">Emulators</h1>
       <p className="mt-4 max-w-xl text-lg text-muted">
         What each system runs on, and where it plays today.
       </p>
@@ -21,7 +21,7 @@ export default function EmulatorsPage() {
               <div className="flex items-center gap-4">
                 <span aria-hidden className="h-14 w-2 rounded-full" style={{ background: s.accent }} />
                 <div>
-                  <h2 className="text-2xl font-bold">{s.name}</h2>
+                  <h2 className="text-2xl font-light">{s.name}</h2>
                   <p className="text-muted">{s.year}</p>
                 </div>
               </div>
