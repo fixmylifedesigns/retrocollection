@@ -16,7 +16,7 @@ export function useCoverTexture(sources: string[], title: string, accent: string
     (async () => {
       for (const src of sources) {
         try {
-          loaded = await loader.loadAsync(`/api/art?u=${encodeURIComponent(src)}`);
+          loaded = await loader.loadAsync(artProxyUrl(src));
           break;
         } catch {
           // try the next cover
@@ -37,6 +37,13 @@ export function useCoverTexture(sources: string[], title: string, accent: string
   }, [key, title, accent]);
 
   return texture;
+}
+
+/** /api/art/<base64url of the image URL>. A path, so each cover gets its own CDN cache entry. */
+function artProxyUrl(src: string): string {
+  const bytes = new TextEncoder().encode(src);
+  const b64 = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `/api/art/${b64}`;
 }
 
 /** A plain printed label: the title on the system's colour. */
