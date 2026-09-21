@@ -1,0 +1,8 @@
+# Netlify serves files in public/ from its CDN, which skips the headers in
+# next.config.ts. The PS2 player (Play!) needs cross-origin isolation for its
+# threads (SharedArrayBuffer), so declare the headers here as well.
+[[headers]]
+  for = "/ps2/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
