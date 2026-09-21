@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Game } from "@/lib/library";
-import { SYSTEMS, boxArtUrl, ps2PlayerUrl } from "@/lib/systems";
+import { SYSTEMS, boxArtCandidates, ps2PlayerUrl } from "@/lib/systems";
 
 const SHAPE = { gb: "cart-gb", gba: "cart-gba", ps2: "case-ps2" } as const;
 const LAUNCH_MS = 520; // matches the insert animation in globals.css
 
 export default function GameCard({ game }: { game: Game }) {
   const system = SYSTEMS[game.system];
-  const [art, setArt] = useState(true);
+  // Your own cover first, then libretro-thumbnails, then a printed label.
+  const sources = [...(game.art ? [game.art] : []), ...boxArtCandidates(game.system, game.fileName)];
+  const [artIndex, setArtIndex] = useState(0);
+  const art = artIndex < sources.length;
+  const nextArt = () => setArtIndex((i) => i + 1);
   const img = useRef<HTMLImageElement>(null);
   const [launching, setLaunching] = useState(false);
   const router = useRouter();
@@ -28,16 +32,15 @@ export default function GameCard({ game }: { game: Game }) {
 
   // A 404 that lands before hydration never reaches onError, so check once on mount.
   useEffect(() => {
-    if (img.current?.complete && img.current.naturalWidth === 0) setArt(false);
-  }, []);
+    if (img.current?.complete && img.current.naturalWidth === 0) nextArt();
+  }, [artIndex]);
 
   const media = (
     <div className={`media ${SHAPE[game.system]}`} style={{ ["--accent" as string]: system.accent }}>
       <div className={`label ${art ? "has-art" : ""}`}>
         {art ? (
-          // Box art comes from libretro-thumbnails; falls back to a printed label.
           // eslint-disable-next-line @next/next/no-img-element
-          <img ref={img} src={boxArtUrl(game.system, game.fileName)} alt="" loading="lazy" onError={() => setArt(false)} />
+          <img key={sources[artIndex]} ref={img} src={sources[artIndex]} alt="" loading="lazy" onError={nextArt} />
         ) : (
           <span>{game.title}</span>
         )}
@@ -56,7 +59,7 @@ export default function GameCard({ game }: { game: Game }) {
         {media}
         <div>
           <p className="caption font-medium">{game.title}</p>
-          <p className="text-xs text-muted">Experimental</p>
+          <p className="text-xs text-muted">{game.region ? `${game.region}, experimental` : "Experimental"}</p>
         </div>
       </a>
     );
@@ -65,7 +68,10 @@ export default function GameCard({ game }: { game: Game }) {
   return (
     <Link href={`/play/${encodeURIComponent(game.id)}`} onClick={(e) => launch(e, `/play/${encodeURIComponent(game.id)}`, false)} className={itemClass}>
       {media}
-      <p className="caption font-medium">{game.title}</p>
+      <div>
+        <p className="caption font-medium">{game.title}</p>
+        {game.region && <p className="text-xs text-muted">{game.region}</p>}
+      </div>
     </Link>
   );
 }

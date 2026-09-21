@@ -1,6 +1,6 @@
 import manifest from "@/data/library.json";
-import { SYSTEMS, SYSTEM_ORDER, SystemId, displayTitle, extensionOf } from "@/lib/systems";
-import { fetchDriveFile, getDriveFileMeta, listDriveFolder } from "@/lib/storage/drive";
+import { SYSTEMS, SYSTEM_ORDER, SystemId, displayTitle, extensionOf, regionOf, titleFromFile } from "@/lib/systems";
+import { fetchDriveFile, listDriveFolder } from "@/lib/storage/drive";
 import { listS3, s3DownloadUrl, s3Prefix } from "@/lib/storage/s3";
 
 export type Provider = "drive" | "s3" | "none";
@@ -11,6 +11,10 @@ export interface Game {
   system: SystemId;
   fileName: string;
   size?: number;
+  /** "Japan", "USA, Europe"… from No-Intro/Redump tags in the file name. */
+  region?: string;
+  /** Your own cover image, when one sits next to the ROM with the same name. */
+  art?: string;
   source: "drive" | "s3" | "manifest";
 }
 
@@ -50,15 +54,25 @@ async function driveGames(): Promise<Game[]> {
     SYSTEM_ORDER.map(async (system) => {
       const folder = folders[system];
       if (!folder) return [];
-      const files = (await listDriveFolder(folder)).filter((f) => isRomFor(system, f.name));
-      return files.map<Game>((f) => ({
-        id: `drive-${f.id}`,
-        title: displayTitle(f.name),
-        system,
-        fileName: f.name,
-        size: f.size ? Number(f.size) : undefined,
-        source: "drive",
-      }));
+      const all = await listDriveFolder(folder);
+      // "Pocket Monsters - Aka (Japan).png" next to "Pocket Monsters - Aka (Japan).gb" becomes its cover.
+      const covers = new Map(
+        all.filter((f) => /\.(png|jpe?g|webp)$/i.test(f.name)).map((f) => [titleFromFile(f.name).toLowerCase(), f.id]),
+      );
+      const files = all.filter((f) => isRomFor(system, f.name));
+      return files.map<Game>((f) => {
+        const cover = covers.get(titleFromFile(f.name).toLowerCase());
+        return {
+          id: `drive-${f.id}`,
+          title: displayTitle(f.name),
+          system,
+          fileName: f.name,
+          size: f.size ? Number(f.size) : undefined,
+          region: regionOf(f.name),
+          art: cover ? `https://drive.google.com/thumbnail?id=${cover}&sz=w600` : undefined,
+          source: "drive",
+        };
+      });
     }),
   );
   return lists.flat();
@@ -77,6 +91,7 @@ async function s3Games(): Promise<Game[]> {
           system,
           fileName,
           size: o.size,
+          region: regionOf(fileName),
           source: "s3",
         };
       });
@@ -92,6 +107,7 @@ export async function getLibrary(): Promise<{ games: Game[]; provider: Provider;
     title: m.title ?? displayTitle(m.fileName),
     system: m.system,
     fileName: m.fileName,
+    region: regionOf(m.fileName),
     source: "manifest",
   }));
   let error: string | undefined;
@@ -130,9 +146,11 @@ export async function openRom(
   }
   if (id.startsWith("drive-") && activeProvider() === "drive") {
     const fileId = id.slice(6);
-    const meta = await getDriveFileMeta(fileId);
-    const allowed = new Set(Object.values(driveFolders()).filter(Boolean));
-    if (!meta?.parents?.some((p) => allowed.has(p))) return null;
+    // Only serve files that are in one of your folders. (Drive hides a file's
+    // `parents` from API-key requests, so check the folder listings instead.)
+    const folders = Object.values(driveFolders()).filter((f): f is string => Boolean(f));
+    const listings = await Promise.all(folders.map((folder) => listDriveFolder(folder)));
+    if (!listings.some((files) => files.some((f) => f.id === fileId))) return null;
     return { stream: await fetchDriveFile(fileId, range) };
   }
   return null;

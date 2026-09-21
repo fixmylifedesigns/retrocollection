@@ -76,6 +76,24 @@ export function displayTitle(fileName: string): string {
   return titleFromFile(fileName).replace(/\s*[([][^)\]]*[)\]]/g, "").trim() || titleFromFile(fileName);
 }
 
+const REGIONS = new Set([
+  "Japan", "USA", "Europe", "World", "Korea", "Asia", "Australia", "Brazil", "Canada", "China",
+  "France", "Germany", "Italy", "Spain", "Netherlands", "Sweden", "Taiwan", "Hong Kong", "UK",
+]);
+
+/** "Pocket Monsters - Aka (Japan) (Rev 1)" -> "Japan". Undefined when the name has no region tag. */
+export function regionOf(fileName: string): string | undefined {
+  const tags = [...titleFromFile(fileName).matchAll(/\(([^)]*)\)/g)].flatMap((m) => m[1].split(/,\s*/));
+  const found = tags.filter((t) => REGIONS.has(t));
+  return found.length ? found.join(", ") : undefined;
+}
+
+/** Box art candidates to try in order: the exact No-Intro name, then without a "(Rev N)" tag. */
+export function boxArtCandidates(system: SystemId, fileName: string): string[] {
+  const noRev = fileName.replace(/\s*\(Rev [^)]*\)/i, "");
+  return [...new Set([boxArtUrl(system, fileName), boxArtUrl(system, noRev)])];
+}
+
 /**
  * The PS2 player is a standalone page (it needs cross-origin isolation), so it
  * must be opened with a plain <a> link or a redirect, never client-side routing.
