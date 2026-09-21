@@ -238,11 +238,39 @@ requestAnimationFrame(pollPads);
 let Module = null;
 let booted = false;
 
+// Play! needs SharedArrayBuffer, which browsers only allow on cross-origin
+// isolated pages. Work out which of the requirements is missing.
+async function isolationProblem() {
+  if (!self.isSecureContext) {
+    return (
+      `This page was opened over plain HTTP at ${location.host}. Browsers only allow the emulator’s threads on HTTPS ` +
+      `or on localhost. On this computer open http://localhost:${location.port || 80}${location.pathname}, use your ` +
+      `deployed https:// site, or run “npm run dev:https” to test from another device on your network.`
+    );
+  }
+  if (self !== self.top) {
+    return "This page is inside another page’s frame, which blocks isolation. Open it in its own tab.";
+  }
+  try {
+    const res = await fetch(location.href, { method: "HEAD", cache: "no-store" });
+    const coop = res.headers.get("cross-origin-opener-policy");
+    const coep = res.headers.get("cross-origin-embedder-policy");
+    if (coop !== "same-origin" || coep !== "require-corp") {
+      return (
+        `The server didn’t send the isolation headers for this page (Cross-Origin-Opener-Policy: ${coop ?? "missing"}, ` +
+        `Cross-Origin-Embedder-Policy: ${coep ?? "missing"}). Check the latest next.config.ts is deployed and that ` +
+        `nothing in front of the site (a proxy or CDN) strips these headers.`
+      );
+    }
+  } catch {
+    // Fall through to the generic hint.
+  }
+  return "The headers arrive but the browser still didn’t isolate the page. Do a full reload, and use a current Chrome, Edge, Firefox or Safari.";
+}
+
 async function loadEngine() {
   if (!self.crossOriginIsolated) {
-    throw new Error(
-      "This page isn’t cross-origin isolated, so the emulator can’t start its threads. Open it with a full page load, and make sure next.config.ts sends the /ps2 headers.",
-    );
+    throw new Error(await isolationProblem());
   }
   let Play;
   try {

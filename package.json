@@ -5,6 +5,7 @@
   "scripts": {
     "predev": "node scripts/fetch-ps2-engine.mjs",
     "dev": "next dev",
+    "dev:https": "node scripts/fetch-ps2-engine.mjs && next dev --experimental-https -H 0.0.0.0",
     "prebuild": "node scripts/fetch-ps2-engine.mjs",
     "build": "next build",
     "ps2:fetch": "node scripts/fetch-ps2-engine.mjs --force",
