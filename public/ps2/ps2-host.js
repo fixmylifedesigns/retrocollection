@@ -370,6 +370,22 @@ function showLibraryGame() {
   });
 }
 
+// Light/dark toggle, shared with the rest of the site.
+function syncThemeButton() {
+  const dark = document.documentElement.dataset.theme !== "light";
+  $("theme").textContent = dark ? "Light" : "Dark";
+  $("theme").setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+}
+$("theme").addEventListener("click", () => {
+  const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = next;
+  try {
+    localStorage.setItem("fixmylife-theme", next);
+  } catch {}
+  syncThemeButton();
+});
+syncThemeButton();
+
 $("fullscreen").addEventListener("click", () => {
   document.querySelector(".stage").requestFullscreen?.();
   canvas.focus();

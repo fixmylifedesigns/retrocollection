@@ -72,7 +72,7 @@ export default function ControllerTester() {
 
   if (pads.length === 0) {
     return (
-      <div className="mt-10 rounded-2xl border-2 border-dashed border-line bg-white/50 px-6 py-14 text-center">
+      <div className="mt-10 rounded-2xl border-2 border-dashed border-line bg-plastic px-6 py-14 text-center">
         <p className="text-lg font-semibold">Waiting for a controller</p>
         <p className="mt-2 text-muted">Pair it using the steps below, then press any button. Browsers only reveal a controller after a button press.</p>
       </div>
