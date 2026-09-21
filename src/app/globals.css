@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --color-paper: #eceef2;
+  --color-plastic: #d4d6dd;
+  --color-ink: #1c1f2e;
+  --color-muted: #5d6174;
+  --color-line: #c3c6cf;
+  --color-gb: #6f7f14;
+  --color-gb-screen: #9bbc0f;
+  --color-gba: #5b45c8;
+  --color-ps2: #2f5fe0;
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.display {
+  font-variation-settings: "wdth" 75;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+}
+
+/* ---------- The shelf: physical media, one shape per system ---------- */
+
+.shelf {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.75rem 1.25rem;
+  padding: 1.5rem 0 0;
+  border-bottom: 14px solid #b8bcc6;
+  box-shadow: 0 6px 0 #979ba7;
+  border-radius: 0 0 3px 3px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.item .media {
+  transition: transform 160ms ease-out;
+}
+.item:is(:hover, :focus-visible) .media {
+  transform: translateY(-8px) rotate(-1.5deg);
+}
+.item[aria-disabled="true"] .media {
+  filter: saturate(0.85);
+}
+
+.caption {
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  max-width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.label {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1.15;
+  padding: 0.4rem;
+  font-variation-settings: "wdth" 80;
+}
+.label.has-art {
+  padding: 0;
+}
+.label img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Game Boy: portrait cart with the notched corner and grip ridges */
+.cart-gb {
+  width: 124px;
+  aspect-ratio: 57 / 65;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 11px 16px;
+  background: linear-gradient(180deg, #d9dbe1, #c4c7cf);
+  border-radius: 4px 4px 10px 10px;
+  clip-path: polygon(0 0, 86% 0, 100% 10%, 100% 100%, 0 100%);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.08);
+  position: relative;
+}
+.cart-gb::before {
+  content: "";
+  position: absolute;
+  inset: 7px 22% auto 11px;
+  height: 8px;
+  background: repeating-linear-gradient(90deg, #b3b6bf 0 2px, transparent 2px 6px);
+}
+
+/* Game Boy Advance: landscape cart with the raised top edge */
+.cart-gba {
+  width: 164px;
+  aspect-ratio: 57 / 38;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 12px;
+  background: linear-gradient(180deg, #cfd1d8, #b9bcc5);
+  border-radius: 14px 14px 5px 5px;
+  box-shadow: inset 0 5px 0 rgb(255 255 255 / 0.35), inset 0 -3px 0 rgb(0 0 0 / 0.08);
+}
+
+/* PS2: tall black case with a coloured spine band */
+.case-ps2 {
+  width: 118px;
+  aspect-ratio: 135 / 190;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 6px 6px;
+  background: #1b1d27;
+  border-radius: 4px;
+  position: relative;
+  box-shadow: inset 3px 0 0 #2a2d3a;
+}
+.case-ps2::before {
+  content: "PS2";
+  position: absolute;
+  top: 3px;
+  left: 8px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: #9fb4f5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item .media {
+    transition: none;
+  }
+  .item:is(:hover, :focus-visible) .media {
+    transform: none;
+  }
+}
