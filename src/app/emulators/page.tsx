@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SYSTEMS, SYSTEM_ORDER } from "@/lib/systems";
+import { SYSTEMS, SYSTEM_ORDER, ps2PlayerUrl } from "@/lib/systems";
 
 export const metadata: Metadata = { title: "Emulators" };
 
@@ -31,7 +31,7 @@ export default function EmulatorsPage() {
                 <dt className="text-muted">Files</dt>
                 <dd>{s.extensions.join("  ")}</dd>
                 <dt className="text-muted">Status</dt>
-                <dd>{ready ? "Plays in the browser" : "Desktop app, in progress"}</dd>
+                <dd>{ready ? "Plays in the browser" : "Experimental in the browser"}</dd>
               </dl>
               {ready ? (
                 <Link
@@ -42,7 +42,16 @@ export default function EmulatorsPage() {
                   Play a {s.shortName} file
                 </Link>
               ) : (
-                <p className="max-w-xs text-sm text-muted sm:justify-self-end">{s.note}</p>
+                <div className="grid gap-2 justify-self-start sm:justify-self-end">
+                  <a
+                    href={ps2PlayerUrl()}
+                    className="justify-self-start rounded-full px-5 py-2.5 font-medium text-white sm:justify-self-end"
+                    style={{ background: s.accent }}
+                  >
+                    Play a {s.shortName} file
+                  </a>
+                  <p className="max-w-xs text-sm text-muted sm:text-right">{s.note}</p>
+                </div>
               )}
             </article>
           );

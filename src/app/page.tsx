@@ -51,8 +51,8 @@ export default async function LibraryPage() {
                 {system.name}
               </h2>
               <span className="text-muted">{list.length}</span>
-              {system.status !== "ready" && (
-                <span className="rounded-full bg-plastic px-2.5 py-0.5 text-xs text-muted">Plays in the desktop app</span>
+              {system.status === "experimental" && (
+                <span className="rounded-full bg-plastic px-2.5 py-0.5 text-xs text-muted">Experimental</span>
               )}
             </div>
             <div className="shelf">

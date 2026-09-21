@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#eceef2" />
+    <title>PS2 · Retro Collection</title>
+    <!--
+      Standalone page on purpose: Play! uses threads (SharedArrayBuffer), which
+      need the cross-origin isolation headers set for /ps2/* in next.config.ts.
+      Those headers only apply to a full page load, so links here are plain <a>.
+    -->
+    <style>
+      :root {
+        --paper: #eceef2; --plastic: #d4d6dd; --ink: #1c1f2e; --muted: #5d6174;
+        --line: #c3c6cf; --ps2: #2f5fe0; --on: #9bbc0f;
+        font-family: "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: var(--ink); background: var(--paper);
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100dvh; }
+      a { color: inherit; }
+      :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+      .wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.25rem 6rem; }
+      header { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 2rem; padding: 1.25rem 0; }
+      .brand { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; }
+      .back { color: var(--muted); font-size: 0.9rem; }
+      .pill { text-decoration: none; margin-left: auto; display: flex; align-items: center; gap: 0.5rem; border: 1px solid var(--line);
+        background: rgb(255 255 255 / 0.6); border-radius: 999px; padding: 0.35rem 0.75rem; font-size: 0.875rem; }
+      .dot { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--line); }
+      .dot.on { background: var(--on); box-shadow: 0 0 0 3px rgb(155 188 15 / 0.25); }
+      h1 { font-size: clamp(2.25rem, 6vw, 3.5rem); line-height: 0.95; letter-spacing: -0.02em; margin: 1.5rem 0 0.5rem; font-weight: 800; }
+      .sub { color: var(--muted); margin: 0 0 1.5rem; }
+      .tag { display: inline-block; background: var(--plastic); color: var(--muted); border-radius: 999px;
+        padding: 0.1rem 0.6rem; font-size: 0.75rem; vertical-align: middle; margin-left: 0.5rem; }
+      .stage { position: relative; max-width: 60rem; margin: 0 auto; aspect-ratio: 4 / 3; background: #000;
+        border-radius: 0.75rem; overflow: hidden; box-shadow: 0 24px 48px -24px rgb(28 31 46 / 0.6); }
+      canvas { width: 100%; height: 100%; display: block; outline: none; }
+      .overlay { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 1.5rem;
+        background: #11131b; color: #e8eaf0; }
+      .overlay[hidden] { display: none; }
+      .overlay p { max-width: 34rem; margin: 0.5rem auto; line-height: 1.5; color: #b9bdcc; }
+      .overlay strong { display: block; font-size: 1.25rem; color: #fff; margin-bottom: 0.25rem; }
+      .drop { border: 2px dashed #4a4f63; border-radius: 1rem; padding: 2.5rem 1.5rem; cursor: pointer; width: min(34rem, 100%); }
+      .drop.drag { border-color: var(--ps2); background: rgb(47 95 224 / 0.12); }
+      .btn { display: inline-block; border: 0; border-radius: 999px; padding: 0.75rem 1.4rem; font: inherit; font-weight: 600;
+        background: var(--ps2); color: #fff; cursor: pointer; text-decoration: none; }
+      .btn.ghost { background: transparent; color: inherit; border: 1px solid #4a4f63; }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      .bar { max-width: 60rem; margin: 0.75rem auto 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: 0.875rem; color: var(--muted); }
+      .bar button { font: inherit; background: none; border: 0; padding: 0; color: var(--ink); text-decoration: underline; cursor: pointer; }
+      .bar .fps { margin-left: auto; font-variant-numeric: tabular-nums; }
+      .info { max-width: 60rem; margin: 2.5rem auto 0; display: grid; gap: 2rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+      .info h2 { font-size: 1.1rem; margin: 0 0 0.5rem; }
+      .info p, .info td { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+      table { border-collapse: collapse; width: 100%; }
+      td { padding: 0.2rem 0; }
+      td:first-child { color: var(--ink); padding-right: 1rem; white-space: nowrap; }
+      kbd { font: inherit; background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 0 0.3rem; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <a class="brand" href="/">Retro Collection</a>
+        <a class="back" href="/">Back to your shelf</a>
+        <a class="pill" href="/controller"><span class="dot" id="padDot"></span><span id="padName">No controller</span></a>
+      </header>
+
+      <h1 id="title">PlayStation 2 <span class="tag">Experimental</span></h1>
+      <p class="sub" id="subtitle">Runs Play! in your browser. Some games won’t boot or will run slowly.</p>
+
+      <div class="stage">
+        <canvas id="outputCanvas" width="640" height="480" tabindex="-1"></canvas>
+
+        <div class="overlay" id="overlay">
+          <div id="overlayBody"><strong>Loading the PS2 engine…</strong></div>
+        </div>
+      </div>
+
+      <div class="bar">
+        <button type="button" id="fullscreen">Full screen</button>
+        <span id="status"></span>
+        <span class="fps" id="fps"></span>
+      </div>
+
+      <section class="info">
+        <div>
+          <h2>Controller</h2>
+          <p>
+            Uses the first connected controller with the standard layout: face buttons, shoulders, triggers, D-pad
+            and both sticks. Sticks are digital here, so movement is full speed in each direction.
+          </p>
+        </div>
+        <div>
+          <h2>Keyboard</h2>
+          <table>
+            <tr><td><kbd>Z</kbd> <kbd>X</kbd> <kbd>A</kbd> <kbd>S</kbd></td><td>Cross, circle, square, triangle</td></tr>
+            <tr><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd></td><td>L1, L2, L3</td></tr>
+            <tr><td><kbd>8</kbd> <kbd>9</kbd> <kbd>0</kbd></td><td>R1, R2, R3</td></tr>
+            <tr><td><kbd>Enter</kbd> <kbd>Backspace</kbd></td><td>Start, select</td></tr>
+            <tr><td><kbd>T</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>H</kbd></td><td>Left stick</td></tr>
+            <tr><td><kbd>I</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd></td><td>Right stick</td></tr>
+          </table>
+        </div>
+        <div>
+          <h2>About</h2>
+          <p>
+            Powered by <a href="https://github.com/jpd002/Play-">Play!</a> by Jean-Philip Desjardins (BSD-2-Clause), with
+            its built-in BIOS, so no BIOS file is needed. Check the
+            <a href="https://github.com/jpd002/Play-Compatibility/issues">compatibility list</a> for your games.
+            In-game saves (memory cards) aren’t kept after you leave this page yet.
+          </p>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./ps2-host.js"></script>
+  </body>
+</html>

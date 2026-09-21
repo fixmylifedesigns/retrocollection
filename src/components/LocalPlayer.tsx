@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import EmulatorFrame from "@/components/EmulatorFrame";
 import PlayTips from "@/components/PlayTips";
-import { SYSTEMS, SYSTEM_ORDER, SystemId, displayTitle, extensionOf, systemForFile } from "@/lib/systems";
+import { SYSTEMS, SYSTEM_ORDER, SystemId, displayTitle, extensionOf, ps2PlayerUrl, systemForFile } from "@/lib/systems";
 
 interface Loaded {
   url: string;
@@ -83,7 +83,7 @@ export default function LocalPlayer() {
         }`}
       >
         <span className="text-lg font-semibold">Drop a ROM here or choose a file</span>
-        <span className="text-sm text-muted">.gb, .gbc, .gba or .zip</span>
+        <span className="text-sm text-muted">.gb, .gbc, .gba or .zip. PS2 discs use the PS2 player.</span>
         <input type="file" accept={ACCEPT} className="sr-only" onChange={(e) => choose(e.target.files?.[0])} />
       </label>
 
@@ -112,7 +112,15 @@ export default function LocalPlayer() {
         </p>
       )}
 
-      {unsupported && <p className="mt-6 text-muted">{SYSTEMS[system].note}</p>}
+      {unsupported && (
+        <p className="mt-6 text-muted">
+          PS2 games open in the PS2 player.{" "}
+          <a href={ps2PlayerUrl()} className="font-medium text-ink underline underline-offset-2">
+            Open the PS2 player
+          </a>{" "}
+          and choose {file.name} there.
+        </p>
+      )}
     </section>
   );
 }

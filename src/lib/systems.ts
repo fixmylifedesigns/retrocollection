@@ -9,7 +9,8 @@ export interface SystemDef {
   core: string | null;
   engine: string;
   extensions: string[];
-  status: "ready" | "planned";
+  /** ready: EmulatorJS in the browser. experimental: Play! on the /ps2 page. */
+  status: "ready" | "experimental";
   note: string;
   accent: string;
 }
@@ -45,10 +46,10 @@ export const SYSTEMS: Record<SystemId, SystemDef> = {
     shortName: "PS2",
     year: "2000",
     core: null,
-    engine: "PCSX2 (desktop app)",
+    engine: "Play! (WebAssembly)",
     extensions: [".iso", ".chd", ".cso"],
-    status: "planned",
-    note: "PS2 needs more power than a browser tab gives. Your PS2 games are listed now and will launch from the desktop app.",
+    status: "experimental",
+    note: "Runs in the browser with Play!. Some games won’t boot or run slowly, and in-game saves aren’t kept yet.",
     accent: "#2f5fe0",
   },
 };
@@ -73,6 +74,17 @@ export function titleFromFile(fileName: string): string {
 /** "Golden Sun (USA, Europe) [!]" -> "Golden Sun" for display. */
 export function displayTitle(fileName: string): string {
   return titleFromFile(fileName).replace(/\s*[([][^)\]]*[)\]]/g, "").trim() || titleFromFile(fileName);
+}
+
+/**
+ * The PS2 player is a standalone page (it needs cross-origin isolation), so it
+ * must be opened with a plain <a> link or a redirect, never client-side routing.
+ */
+export function ps2PlayerUrl(game?: { id: string; fileName: string; title: string; size?: number }): string {
+  if (!game) return "/ps2/index.html";
+  const q = new URLSearchParams({ game: game.id, file: game.fileName, title: game.title });
+  if (game.size) q.set("size", String(game.size));
+  return `/ps2/index.html?${q}`;
 }
 
 /** Box art from the libretro-thumbnails project. Only matches No-Intro/Redump file names. */

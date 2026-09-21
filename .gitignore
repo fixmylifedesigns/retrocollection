@@ -10,3 +10,7 @@ next-env.d.ts
 # Local ROMs for development — never commit game files
 public/roms/*
 !public/roms/.gitkeep
+# PS2 engine, downloaded by scripts/fetch-ps2-engine.mjs
+public/ps2/Play.js
+public/ps2/Play.wasm
+public/ps2/VERSION

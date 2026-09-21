@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import EmulatorFrame from "@/components/EmulatorFrame";
 import PlayTips from "@/components/PlayTips";
 import { formatSize, getGame } from "@/lib/library";
-import { SYSTEMS } from "@/lib/systems";
+import { SYSTEMS, ps2PlayerUrl } from "@/lib/systems";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -17,6 +17,7 @@ export default async function PlayPage({ params }: Props) {
   const id = decodeURIComponent((await params).id);
   const game = await getGame(id);
   if (!game) notFound();
+  if (game.system === "ps2") redirect(ps2PlayerUrl(game));
   const system = SYSTEMS[game.system];
 
   return (
@@ -32,14 +33,8 @@ export default async function PlayPage({ params }: Props) {
         </p>
       </div>
 
-      {system.status === "ready" ? (
-        <>
-          <EmulatorFrame system={game.system} romUrl={`/api/rom/${encodeURIComponent(game.id)}`} saveName={game.title} />
-          <PlayTips />
-        </>
-      ) : (
-        <p className="max-w-xl text-lg text-muted">{system.note}</p>
-      )}
+      <EmulatorFrame system={game.system} romUrl={`/api/rom/${encodeURIComponent(game.id)}`} saveName={game.title} />
+      <PlayTips />
     </section>
   );
 }

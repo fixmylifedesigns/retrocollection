@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [{ key: "Permissions-Policy", value: "gamepad=(self)" }],
       },
+      {
+        // The PS2 player (Play!) runs on threads, which need SharedArrayBuffer,
+        // which browsers only allow on cross-origin isolated pages.
+        source: "/ps2/:path*",
+        headers: [
+          { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+          { key: "Cross-Origin-Embedder-Policy", value: "require-corp" },
+        ],
+      },
     ];
   },
 };

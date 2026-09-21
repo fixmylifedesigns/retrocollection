@@ -8,11 +8,22 @@ A web app for playing your own Game Boy, Game Boy Advance and PS2 collection, wi
 | --- | --- | --- |
 | Game Boy / Game Boy Color | Gambatte via [EmulatorJS](https://emulatorjs.org) | Yes |
 | Game Boy Advance | mGBA via EmulatorJS | Yes |
-| PlayStation 2 | PCSX2 (planned) | No: listed in the library, plays in the future desktop app |
+| PlayStation 2 | [Play!](https://github.com/jpd002/Play-) (WebAssembly) | Experimental, at `/ps2/index.html` |
 
-PS2 emulation needs far more CPU and GPU access than a browser tab provides, and no production-ready WebAssembly PS2 core exists. The library already reads your PS2 folder so the games are there when the Electron build lands.
+### PS2 (experimental)
 
-**Controllers.** Pair a controller with your device over Bluetooth like any other accessory. Browsers expose it through the Gamepad API (not Web Bluetooth), so it works in Chrome, Edge, Firefox and Safari. Use `/controller` to test buttons, sticks and rumble. Browsers only reveal a controller after its first button press.
+PS2 runs on Play!'s WebAssembly build. Expect some games not to boot and others to run slowly; check the [compatibility list](https://github.com/jpd002/Play-Compatibility/issues). No BIOS file is needed. In-game saves (memory cards) aren't kept after you leave the page yet.
+
+**One-time setup.** The engine isn't committed to git. Build it once:
+
+1. On GitHub, open **Actions**, choose **Build PS2 engine (Play!)**, and click **Run workflow** (takes roughly 15–30 minutes). It publishes `Play.js` and `Play.wasm` to this repo's `play-wasm` release.
+2. `npm run dev` and `npm run build` download them into `public/ps2/` automatically. Run `npm run ps2:fetch` to pull a newer build. Set `PS2_ENGINE_URL` to host the files somewhere else.
+
+**How it works.** The PS2 player is a standalone page because Play! uses threads, which need the cross-origin isolation headers set for `/ps2/*` in `next.config.ts`. Library games stream from your storage in 1 MB chunks with HTTP range requests, so a 4 GB image never downloads up front. Controllers go through a Gamepad-to-keyboard bridge, since Play!'s web build only reads the keyboard. For PS2 images, a bucket is much faster than Google Drive, which has to be proxied through the server for every chunk.
+
+### Controllers
+
+Pair a controller with your device over Bluetooth like any other accessory. Browsers expose it through the Gamepad API (not Web Bluetooth), so it works in Chrome, Edge, Firefox and Safari. Use `/controller` to test buttons, sticks and rumble. Browsers only reveal a controller after its first button press.
 
 ## Getting started
 
@@ -31,6 +42,7 @@ Open http://localhost:3000. With no storage connected you can still play any ROM
 - `/controller` Live controller tester and pairing help
 - `/play/[id]` Plays a game from your library
 - `/play/local` Plays a file from your device
+- `/ps2/index.html` PS2 player: pick a disc image, or opened from a PS2 game on your shelf
 
 ## Connecting your ROM storage
 
@@ -63,6 +75,7 @@ Set `S3_ENDPOINT`, `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCE
     "AllowedOrigins": ["http://localhost:3000", "https://your-site.vercel.app"],
     "AllowedMethods": ["GET", "HEAD"],
     "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["Content-Range", "Content-Length", "Accept-Ranges"],
     "MaxAgeSeconds": 3600
   }
 ]
@@ -96,7 +109,7 @@ There's no login yet, so anyone with the site URL can play from your library. Un
 ## Roadmap
 
 - **Login**: Auth.js (Google/GitHub OAuth) or Firebase Auth, gating `/api/rom` and the library
-- **Desktop**: Electron shell that reuses this UI and launches PCSX2 for PS2 games
+- **Desktop**: Electron shell that reuses this UI and runs PS2 natively (PCSX2, or Play!'s libretro core) for full speed and saves
 - **Android**: Capacitor wrapper around the same UI
 - **Cloud saves**: sync EmulatorJS save files to the bucket per user
 
@@ -111,4 +124,7 @@ src/
   lib/library.ts       merges manifest + storage provider listings
   lib/storage/         Google Drive and S3-compatible adapters
 public/emulator/       isolated EmulatorJS host page (loaded in an iframe)
+public/ps2/            PS2 player page (Play!), engine files downloaded at build time
+scripts/               fetch-ps2-engine.mjs
+.github/workflows/     build-ps2-engine.yml builds Play! for the web
 ```
