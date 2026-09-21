@@ -94,6 +94,11 @@ export function boxArtCandidates(system: SystemId, fileName: string): string[] {
   return [...new Set([boxArtUrl(system, fileName), boxArtUrl(system, noRev)])];
 }
 
+/** Every cover to try for a game: your own image first, then libretro-thumbnails. */
+export function coverSources(game: { system: SystemId; fileName: string; art?: string }): string[] {
+  return [...(game.art ? [game.art] : []), ...boxArtCandidates(game.system, game.fileName)];
+}
+
 /**
  * The PS2 player is a standalone page (it needs cross-origin isolation), so it
  * must be opened with a plain <a> link or a redirect, never client-side routing.
@@ -103,6 +108,12 @@ export function ps2PlayerUrl(game?: { id: string; fileName: string; title: strin
   const q = new URLSearchParams({ game: game.id, file: game.fileName, title: game.title });
   if (game.size) q.set("size", String(game.size));
   return `/ps2/index.html?${q}`;
+}
+
+/** Where a game plays. PS2 needs a full page load (its page is cross-origin isolated). */
+export function playTarget(game: { id: string; system: SystemId; fileName: string; title: string; size?: number }) {
+  if (game.system === "ps2") return { href: ps2PlayerUrl(game), fullLoad: true };
+  return { href: `/play/${encodeURIComponent(game.id)}`, fullLoad: false };
 }
 
 /** Box art from the libretro-thumbnails project. Only matches No-Intro/Redump file names. */

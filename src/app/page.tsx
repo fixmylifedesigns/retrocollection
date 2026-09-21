@@ -1,6 +1,5 @@
 import Link from "next/link";
-import GameCard from "@/components/GameCard";
-import ShelfRail from "@/components/ShelfRail";
+import SystemShowcase from "@/components/SystemShowcase";
 import { getLibrary, type Provider } from "@/lib/library";
 import { SYSTEMS, SYSTEM_ORDER, type SystemId } from "@/lib/systems";
 
@@ -59,7 +58,7 @@ export default async function LibraryPage() {
         const system = SYSTEMS[id];
         const list = bySystem[id];
         return (
-          // Each system gets its own stage; a 3D render of the console can sit above the rail later.
+          // Each system gets its own 3D stage above its rail of games.
           <section key={id} id={`shelf-${id}`} className="scroll-mt-8 border-t border-line py-16 text-center" aria-labelledby={`shelf-${id}-title`}>
             <p className="text-sm text-muted">
               {system.year}
@@ -72,13 +71,7 @@ export default async function LibraryPage() {
               {list.length} {list.length === 1 ? "game" : "games"}
             </p>
             {list.length > 0 ? (
-              <ShelfRail label={system.name}>
-                {list.map((game) => (
-                  <div role="listitem" key={game.id}>
-                    <GameCard game={game} />
-                  </div>
-                ))}
-              </ShelfRail>
+              <SystemShowcase games={list} label={system.name} />
             ) : (
               <p className="mx-auto mt-8 max-w-md text-muted">{emptyShelfText(id, provider)}</p>
             )}
