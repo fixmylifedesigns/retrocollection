@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/fetch-ps2-engine.mjs",
+    "predev": "node scripts/fetch-ps2-engine.mjs && node scripts/copy-draco.mjs",
     "dev": "next dev",
-    "dev:https": "node scripts/fetch-ps2-engine.mjs && next dev --experimental-https -H 0.0.0.0",
-    "prebuild": "node scripts/fetch-ps2-engine.mjs",
+    "dev:https": "node scripts/fetch-ps2-engine.mjs && node scripts/copy-draco.mjs && next dev --experimental-https -H 0.0.0.0",
+    "prebuild": "node scripts/fetch-ps2-engine.mjs && node scripts/copy-draco.mjs",
     "build": "next build",
     "ps2:fetch": "node scripts/fetch-ps2-engine.mjs --force",
     "start": "next start",

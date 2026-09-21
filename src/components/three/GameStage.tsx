@@ -2,10 +2,11 @@
 
 import { ContactShadows, PresentationControls } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { useRef } from "react";
+import { Component, Suspense, useRef, type ReactNode } from "react";
 import * as THREE from "three";
 import type { Game } from "@/lib/library";
 import { SYSTEMS, coverSources, extensionOf } from "@/lib/systems";
+import { GbaModelCart, GbcModelCart, type GbcShell } from "./CartridgeModels";
 import { GameBoyCart, GbaCart, Ps2Case } from "./Media3D";
 import { useCoverTexture } from "./useCoverTexture";
 
@@ -52,13 +53,44 @@ function Media({ game, launching, still }: { game: Game; launching: boolean; sti
   });
 
   const gbc = extensionOf(game.fileName) === ".gbc";
+  const shell: GbcShell = /yellow|pikachu/i.test(game.fileName) ? "yellow" : gbc ? "black" : "grey";
+  // The simple shapes show while a model loads, and stay if it can't load.
+  const simpleGb = <GameBoyCart texture={texture} color={gbc ? "#3c404b" : undefined} />;
+  const simpleGba = <GbaCart texture={texture} />;
   return (
     <group ref={group}>
-      {game.system === "gb" && <GameBoyCart texture={texture} color={gbc ? "#3c404b" : undefined} />}
-      {game.system === "gba" && <GbaCart texture={texture} />}
+      {game.system === "gb" && (
+        <ModelOr fallback={simpleGb}>
+          <GbcModelCart texture={texture} shell={shell} size={6.5} />
+        </ModelOr>
+      )}
+      {game.system === "gba" && (
+        <ModelOr fallback={simpleGba}>
+          <GbaModelCart texture={texture} size={5.7} />
+        </ModelOr>
+      )}
       {game.system === "ps2" && <Ps2Case texture={texture} />}
     </group>
   );
+}
+
+/** Renders a 3D model, or `fallback` while it loads or if it fails to load. */
+function ModelOr({ fallback, children }: { fallback: ReactNode; children: ReactNode }) {
+  return (
+    <ModelBoundary fallback={fallback}>
+      <Suspense fallback={fallback}>{children}</Suspense>
+    </ModelBoundary>
+  );
+}
+
+class ModelBoundary extends Component<{ fallback: ReactNode; children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? this.props.fallback : this.props.children;
+  }
 }
 
 export default function GameStage({ game, launching, still }: { game: Game; launching: boolean; still: boolean }) {

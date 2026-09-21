@@ -14,3 +14,5 @@ public/roms/*
 public/ps2/Play.js
 public/ps2/Play.wasm
 public/ps2/VERSION
+# Draco decoder, copied from three.js by scripts/copy-draco.mjs
+public/draco/
